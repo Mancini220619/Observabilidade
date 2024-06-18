@@ -1,0 +1,126 @@
+##atualizar pacote so
+sudo apt update && sudo apt upgrade -y
+
+##versao do so
+lsb_release -a
+
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 22.04.4 LTS
+Release:        22.04
+Codename:       jammy
+
+##obter pacote
+wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
+
+##descompactar pacote baixado
+dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+
+##atualiza pacotes
+apt update
+
+##instala dependencias zabbix
+apt install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent2
+
+##instalação sql
+apt install mysql-server
+
+##saber versao mysql
+mysql --version
+
+##status mysql
+service mysql status
+
+##configuração banco
+mysql -uroot -p
+password
+mysql> create database monitor character set utf8mb4 collate utf8mb4_bin;
+mysql> create user monitor@localhost identified by 'monitor2022';
+mysql> grant all privileges on monitor.* to monitor@localhost;
+mysql> set global log_bin_trust_function_creators = 1;
+mysql> quit;
+
+##execução script que monta o banco
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -umonitor -p monitor
+
+##alterar confoguração do nome do baco usuario e senha do banco zabbix
+vim /etc/zabbix/zabbix_server.conf
+>> alterar nome do banco usuario e senha 
+
+##restar serviços apache2 e zabbix agent2
+systemctl restart zabbix-server zabbix-agent2 apache2
+systemctl enable zabbix-server zabbix-agent2 apache2
+
+## status firewal e liberar porta
+sudo ufw status
+sudo ufw allow 80/tcp
+sudo ufw status
+
+sudo ufw allow ssh
+sudo ufw enable
+sudo ufw status
+
+
+sudo ufw allow 10050/tcp
+sudo ufw allow 10050/udp
+sudo ufw allow 10051/tcp
+sudo ufw allow 10051/udp
+
+#status ssh
+systemctl status ssh
+
+##liberar ssh
+vim /etc/ssh/sshd_config
+
+##mudar linguagem para PT-BR
+dpkg-reconfigure locales
+PT-BT UTF8
+
+## restart apache para assumir linguagem setup zabbix
+service apache2 restart
+
+## monitorar em tempo real o arquivo de log do servidor Zabbix.
+tail -f /var/log/zabbix/zabbix_server.log
+
+##stressar CPU
+sudo apt update
+sudo apt install stress
+stress --cpu 4 --timeout 60
+
+##definindo ip fixo
+sudo vim /etc/netplan/00-installer-config.yaml
+
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses:
+        - 192.168.0.4/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 192.168.0.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+
+netplan apply
+
+##verso do zabbiz server
+zabbix_server -V
+
+root@zabbixserver:/home/mancini# zabbix_server -V
+zabbix_server (Zabbix) 6.0.30
+Revision 680df722d6b 21 May 2024, compilation time: May 21 2024 06:58:53
+
+Copyright (C) 2024 Zabbix SIA
+License GPLv2+: GNU GPL version 2 or later <https://www.gnu.org/licenses/>.
+This is free software: you are free to change and redistribute it according to
+the license. There is NO WARRANTY, to the extent permitted by law.
+
+This product includes software developed by the OpenSSL Project
+for use in the OpenSSL Toolkit (http://www.openssl.org/).
+
+Compiled with OpenSSL 3.0.2 15 Mar 2022
+Running with OpenSSL 3.0.2 15 Mar 2022

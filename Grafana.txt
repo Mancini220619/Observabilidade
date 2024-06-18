@@ -1,0 +1,74 @@
+Grafana
+
+## status firewal e liberar porta
+sudo ufw status
+sudo ufw allow 80/tcp
+sudo ufw status
+
+sudo ufw allow ssh
+sudo ufw enable
+sudo ufw status
+
+##atualizar pacote so
+sudo apt update && sudo apt upgrade -y
+
+##liberar porta fireall 3000
+sudo ufw allow 3000/tcp
+
+
+##definindo ip fixo
+sudo vim /etc/netplan/00-installer-config.yaml
+
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses:
+        - 192.168.0.5/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 192.168.0.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+
+netplan apply
+
+
+cd /opt
+
+## instalando agente zabbix - zabbix-release_6.0-2+ubuntu22.04_all.deb - 
+## https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-2%2Bubuntu22.04_all.deb
+
+wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-2%2Bubuntu22.04_all.deb
+
+dpkg -i zabbix-release_6.0-2+ubuntu22.04_all.deb
+
+apt update
+
+apt-get install zabbix-agent -y
+
+systemctl restart zabbix-agent
+
+systemctl enable zabbix-agent
+
+systemctl status zabbix-agent
+
+vim /etc/zabbix/zabbix_agentd.conf
+
+#alterado
+Server=192.168.0.4
+ServerActive=192.168.0.4
+Hostname=zabbixserver
+
+systemctl restart zabbix-agent
+
+
+#ajuste de horario
+timedatectl
+timedatectl list-timezones | grep Sao_Paulo
+sudo timedatectl set-timezone America/Sao_Paulo
+timedatectl
+
